@@ -1,0 +1,34 @@
+version: '3.1'
+
+services:
+  wordpress:
+    build: ../../common
+    restart: always
+    ports:
+      - 8080:80
+    env_file:
+      - ../../common/.env
+    volumes:
+      - ../../common/wordpress:/var/www/html
+      - ../../common/plugins:/var/www/html/wp-content/plugins
+      - ./plugin:/var/www/html/wp-content/plugins/plugin-name
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: "512M"
+
+  db:
+    image: mysql:5.7
+    restart: always
+    env_file:
+      - ../../common/.env
+    environment:
+      MYSQL_ROOT_PASSWORD: somerootpassword
+    volumes:
+      - ./database:/var/lib/mysql
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"

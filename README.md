@@ -17,11 +17,11 @@ wordpress-docker/
 │       ├── woocommerce
 │       └── MOC-WP-Logger-1.0.0
 ├── instances/
-│   ├── woocommerce-shipping-purolator/
+│   ├── <instance-name>/
 │   │   ├── docker-compose.yml
 │   │   ├── database/
 │   │   └── plugin/
-│   │       └── woocommerce-shipping-purolator/
+│   │       └── <your-plugin-name>/
 └── README.md
 ```
 
@@ -98,10 +98,10 @@ wordpress-docker/
 
 1. **Create `docker-compose.yml` for the Plugin Instance**
 
-   Edit the `docker-compose.yml` file for `woocommerce-shipping-purolator`:
+   Edit the `docker-compose.yml` file for the plugin instance:
 
    ```sh
-   nano ~/wordpress-docker/instances/woocommerce-shipping-purolator/docker-compose.yml
+   nano ~/wordpress-docker/instances/<instance-name>/docker-compose.yml
    ```
 
    Add the following content:
@@ -121,7 +121,7 @@ wordpress-docker/
          - ../../common/wordpress:/var/www/html
          - ../../common/plugins/woocommerce:/var/www/html/wp-content/plugins/woocommerce
          - ../../common/plugins/MOC-WP-Logger-1.0.0:/var/www/html/wp-content/plugins/MOC-WP-Logger-1.0.0
-         - ./plugin/woocommerce-shipping-purolator:/var/www/html/wp-content/plugins/woocommerce-shipping-purolator
+         - ./plugin/<your-plugin-name>:/var/www/html/wp-content/plugins/<your-plugin-name>
        deploy:
          resources:
            limits:
@@ -153,7 +153,7 @@ wordpress-docker/
 1. **Navigate to the instance directory and run the build process**:
 
    ```sh
-   cd ~/wordpress-docker/instances/woocommerce-shipping-purolator
+   cd ~/wordpress-docker/instances/<instance-name>
    docker-compose down
    docker-compose up --build -d
    ```
@@ -166,7 +166,7 @@ wordpress-docker/
 
 2. **Log in to the WordPress admin panel and verify the plugins**:
 
-   Navigate to the Plugins page to ensure that WooCommerce, MOC-WP-Logger-1.0.0, and woocommerce-shipping-purolator plugins are active.
+   Navigate to the Plugins page to ensure that WooCommerce, MOC-WP-Logger-1.0.0, and your specific plugin are active.
 
 ### Step 5: Test Database Persistence
 

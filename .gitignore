@@ -4,18 +4,8 @@
 # Common plugins
 /common/plugins/*
 
-# Node modules (if any)
-/node_modules/
+# Instances
+/instances/*
 
-# Log files
-*.log
-
-# Temporary files
-*.tmp
-*.swp
-
-# Database files
-/instances/*/database/
-
-# Ignore everything in plugin directories
-/instances/*/plugin/*
+# Ignore .env file
+/common/.env

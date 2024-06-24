@@ -5,13 +5,14 @@ services:
     build: ../../common
     restart: always
     ports:
-      - 8080:80
+      - "8081:80"
     env_file:
       - ../../common/.env
     volumes:
       - ../../common/wordpress:/var/www/html
-      - ../../common/plugins:/var/www/html/wp-content/plugins
-      - ./plugin:/var/www/html/wp-content/plugins/plugin-name
+      - ../../common/plugins/woocommerce:/var/www/html/wp-content/plugins/woocommerce
+      - ../../common/plugins/MOC-WP-Logger-1.0.0:/var/www/html/wp-content/plugins/MOC-WP-Logger-1.0.0
+      - ./plugin/<your-plugin-name>:/var/www/html/wp-content/plugins/<your-plugin-name>
     deploy:
       resources:
         limits:
@@ -26,9 +27,13 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: somerootpassword
     volumes:
-      - ./database:/var/lib/mysql
+      - db_data:/var/lib/mysql
+      - ../../common/init.sql:/docker-entrypoint-initdb.d/init.sql
     deploy:
       resources:
         limits:
           cpus: "0.5"
           memory: "256M"
+
+volumes:
+  db_data:

@@ -1,11 +1,14 @@
 # WordPress core files
 /common/wordpress/*
+!/common/wordpress/.gitkeep
 
 # Common plugins
 /common/plugins/*
+!/common/plugins/.gitkeep
 
 # Instances
 /instances/*
+!/instances/.gitkeep
 
 # Ignore .env file
 /common/.env

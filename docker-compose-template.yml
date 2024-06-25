@@ -12,7 +12,10 @@ services:
       - ../../common/wordpress:/var/www/html
       - ../../common/plugins/woocommerce:/var/www/html/wp-content/plugins/woocommerce
       - ../../common/plugins/MOC-WP-Logger-1.0.0:/var/www/html/wp-content/plugins/MOC-WP-Logger-1.0.0
-      - ./plugin/<your-plugin-name>:/var/www/html/wp-content/plugins/<your-plugin-name>
+      - ./plugin/{instance-name}:/var/www/html/wp-content/plugins/{instance-name}
+    depends_on:
+      db:
+        condition: service_healthy
     deploy:
       resources:
         limits:
@@ -26,9 +29,17 @@ services:
       - ../../common/.env
     environment:
       MYSQL_ROOT_PASSWORD: somerootpassword
+      MYSQL_DATABASE: exampledb
+      MYSQL_USER: exampleuser
+      MYSQL_PASSWORD: examplepass
     volumes:
-      - db_data:/var/lib/mysql
+      - db_data_{instance-name}:/var/lib/mysql
       - ../../common/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     deploy:
       resources:
         limits:
@@ -36,4 +47,4 @@ services:
           memory: "256M"
 
 volumes:
-  db_data:
+  db_data_{instance-name}:

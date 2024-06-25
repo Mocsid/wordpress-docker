@@ -1,0 +1,13 @@
+{
+    "require": {
+      "php": "^8.2",
+      "woocommerce/woocommerce": "^5.0",
+      "pelago/emogrifier": "^3.1.0"
+    },
+    "config": {
+      "platform": {
+        "php": "8.2.0"
+      }
+    }
+  }
+  

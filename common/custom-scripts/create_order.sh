@@ -9,7 +9,7 @@ USER=${1:-$DEFAULT_USER}
 PRODUCT_ID=${2:-$DEFAULT_PRODUCT_ID}
 
 # Create a new order and capture the order ID
-order_id=$(wp wc shop_order create --status=processing --user=$USER --allow-root --quiet)
+order_id=$(wp wc shop_order create --status=processing --user=$USER --allow-root --porcelain)
 echo "Created order with ID: $order_id"
 
 # Add line items to the order

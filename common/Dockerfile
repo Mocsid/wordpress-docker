@@ -5,6 +5,11 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
     chmod +x wp-cli.phar && \
     mv wp-cli.phar /usr/local/bin/wp
 
+# Install necessary dependencies and the SOAP extension
+RUN apt-get update && \
+    apt-get install -y libxml2-dev && \
+    docker-php-ext-install soap
+
 # Copy custom entry script
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 

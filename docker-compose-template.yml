@@ -13,7 +13,7 @@ services:
       - ../../common/plugins/woocommerce:/var/www/html/wp-content/plugins/woocommerce
       - ../../common/plugins/MOC-WP-Logger-1.0.0:/var/www/html/wp-content/plugins/MOC-WP-Logger-1.0.0
       - ./plugin/{instance-name}:/var/www/html/wp-content/plugins/{instance-name}
-      - ../../common/custom-scripts/custom-scripts:/var/www/html
+      - ../../common/custom-scripts:/var/www/html/custom-scripts
       - ../../common/wp-content/moc-logs:/var/www/html/wp-content/moc-logs
     depends_on:
       db:

@@ -17,5 +17,11 @@ fi
 chown www-data:www-data /var/www/html/wp-config.php
 chmod 644 /var/www/html/wp-config.php
 
+# Write out the cron job
+echo "* * * * * www-data /usr/local/bin/php /var/www/html/wp-cron.php" >> /etc/crontab
+
+# Ensure that cron is running
+service cron start
+
 # Execute the original entrypoint script from WordPress image
 docker-entrypoint.sh "$@"

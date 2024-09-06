@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Default values
-DEFAULT_USER="admin_pdf_watermark"
-DEFAULT_PRODUCT_ID=92
+DEFAULT_USER="admin_myob_integration"
+DEFAULT_PRODUCT_ID=34
 
 # Check if a user and product ID are provided, otherwise use defaults
 USER=${1:-$DEFAULT_USER}
@@ -27,3 +27,11 @@ echo "Updated shipping details for order ID: $order_id"
 # Mark the order as completed
 wp wc shop_order update $order_id --status=completed --user=$USER --allow-root
 echo "Order ID $order_id has been marked as completed"
+
+# Resync the order to MYOB
+wp resync_order $order_id --allow-root
+echo "Order ID $order_id has been resynced to MYOB"
+
+# Run the wp_order_batch_process_cron event
+wp cron event run wp_order_batch_process_cron --allow-root
+echo "wp_order_batch_process_cron event has been run"

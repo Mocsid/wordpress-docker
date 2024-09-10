@@ -15,6 +15,9 @@ RUN apt-get update && \
 # Clean up to reduce the image size
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Modify www-data user to have the same UID and GID as the host user (ubuntu_huawei)
+RUN usermod -u 1000 www-data && groupmod -g 1000 www-data
+
 # Copy custom entry script from the common directory
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 

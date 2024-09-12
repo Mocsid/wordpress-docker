@@ -5,20 +5,20 @@ services:
     build: ../../common
     restart: always
     ports:
-      - "8081:80"
+      - "8081:80"  # Port mapping for WordPress
     env_file:
-      - ../../common/.env
+      - ../../common/.env  # Environment variables for WordPress
     volumes:
-      - ../../common/wordpress:/var/www/html
-      - ../../common/plugins/woocommerce:/var/www/html/wp-content/plugins/woocommerce
-      - ../../common/plugins/MOC-WP-Logger-1.0.0:/var/www/html/wp-content/plugins/MOC-WP-Logger-1.0.0
-      - ./plugin/{instance-name}:/var/www/html/wp-content/plugins/{instance-name}
-      - ../../common/custom-scripts:/var/www/html/custom-scripts
+      - ../../common/wordpress:/var/www/html  # WordPress core files
+      - ../../common/plugins/woocommerce:/var/www/html/wp-content/plugins/woocommerce  # WooCommerce plugin
+      - ../../common/plugins/MOC-WP-Logger-1.0.0:/var/www/html/wp-content/plugins/MOC-WP-Logger-1.0.0  # Logger plugin
+      - ./plugin/{instance-name}:/var/www/html/wp-content/plugins/{instance-name}  # Instance-specific plugin
+      - ../../common/custom-scripts:/var/www/html/custom-scripts  # Custom scripts
     depends_on:
       db:
-        condition: service_healthy
+        condition: service_healthy  # Ensure DB is healthy before starting
       mailhog:
-        condition: service_healthy
+        condition: service_healthy  # Ensure MailHog is healthy before starting
     networks:
       - wordpress-network
     deploy:
@@ -31,17 +31,17 @@ services:
     image: mysql:5.7
     restart: always
     env_file:
-      - ../../common/.env
+      - ../../common/.env  # Environment variables for MySQL
     environment:
       MYSQL_ROOT_PASSWORD: somerootpassword
       MYSQL_DATABASE: exampledb
       MYSQL_USER: exampleuser
       MYSQL_PASSWORD: examplepass
     volumes:
-      - db_data_{instance-name}:/var/lib/mysql
-      - ../../common/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - db_data_{instance-name}:/var/lib/mysql  # Persistent storage for MySQL
+      - ../../common/init.sql:/docker-entrypoint-initdb.d/init.sql  # SQL initialization script
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]  # Healthcheck for MySQL
       interval: 10s
       timeout: 5s
       retries: 3
@@ -66,7 +66,7 @@ services:
 
 networks:
   wordpress-network:
-    driver: bridge
+    driver: bridge  # Bridge network to connect services
 
 volumes:
-  db_data_{instance-name}:
+  db_data_{instance-name}:  # Volume for storing MySQL data

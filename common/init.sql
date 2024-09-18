@@ -1,4 +1,9 @@
 CREATE DATABASE IF NOT EXISTS exampledb;
-CREATE USER 'exampleuser'@'%' IDENTIFIED BY 'examplepass';
+
+-- Check if the user exists before creating it
+CREATE USER IF NOT EXISTS 'exampleuser'@'%' IDENTIFIED BY 'examplepass';
+
+-- Grant privileges to the user
 GRANT ALL PRIVILEGES ON exampledb.* TO 'exampleuser'@'%';
+
 FLUSH PRIVILEGES;

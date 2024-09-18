@@ -53,11 +53,15 @@ services:
 
   mailhog:
     image: mailhog/mailhog
+    restart: always
     ports:
-      - "1025:1025"  # SMTP server port
-      - "8025:8025"  # Web interface port
+      - 8025:8025 # MailHog Web UI
+      - 1025:1025 # MailHog SMTP server
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8025"]  # Check if MailHog web UI is up
+      test:
+        - CMD
+        - pgrep
+        - MailHog
       interval: 10s
       timeout: 5s
       retries: 3

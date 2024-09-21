@@ -13,4 +13,37 @@
 # Ignore .env file
 /common/.env
 
+# Ignore WPCS (WordPress Coding Standards)
 common/wpcs/*
+
+# Grafana data
+/common/grafana/data/*
+
+# Prometheus configuration (but keep prometheus.yml)
+/common/prometheus/*
+!/common/prometheus/prometheus.yml
+
+# Database data for instances (replace {instance-name} with the actual name or use a wildcard)
+db_data_{instance-name}/*
+db_data_*/*
+
+# Node.js dependencies (if you use Node.js)
+/node_modules
+/common/node_modules
+
+# Log files
+*.log
+
+# Docker-related files
+docker-compose.override.yml
+docker-compose.override.yaml
+docker-compose.yml
+
+# Ignore build files
+/build
+/dist
+
+# Ignore cache or temporary files
+/tmp
+.cache
+/.temp

@@ -45,6 +45,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    networks:
+      - wordpress-network
     deploy:
       resources:
         limits:
@@ -67,6 +69,40 @@ services:
       retries: 3
     networks:
       - wordpress-network
+
+  grafana:
+    image: grafana/grafana
+    restart: always
+    ports:
+      - 3000:3000  # Grafana web interface
+    volumes:
+      - ../../common/grafana/data:/var/lib/grafana  # Shared Grafana data storage
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=adminpassword  # Grafana admin password
+    depends_on:
+      - prometheus  # Ensure Prometheus is started before Grafana
+    networks:
+      - wordpress-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"
+
+  prometheus:
+    image: prom/prometheus
+    restart: always
+    ports:
+      - 9090:9090  # Prometheus web interface
+    volumes:
+      - ../../common/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml  # Prometheus config
+    networks:
+      - wordpress-network
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: "256M"
 
 networks:
   wordpress-network:

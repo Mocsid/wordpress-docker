@@ -15,10 +15,8 @@ services:
       - ./plugin/{instance-name}:/var/www/html/wp-content/plugins/{instance-name}  # Instance-specific plugin
       - ../../common/custom-scripts:/var/www/html/custom-scripts  # Custom scripts
     depends_on:
-      db:
-        condition: service_healthy  # Ensure DB is healthy before starting
-      mailhog:
-        condition: service_healthy  # Ensure MailHog is healthy before starting
+      - db
+      - mailhog
     networks:
       - wordpress-network
     deploy:

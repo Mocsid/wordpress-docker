@@ -34,23 +34,42 @@ for INSTANCE_DIR in "$INSTANCE_BASE_DIR"/*/; do
   if [ -d "$INSTANCE_DIR" ]; then
     INSTANCE_NAME=$(basename "$INSTANCE_DIR")
     DOCKER_COMPOSE_FILE="${INSTANCE_DIR%/}/docker-compose.yml"
+    NGINX_DIR="${INSTANCE_DIR%/}/nginx"
+    CONF_D_DIR="$NGINX_DIR/conf.d"
     
     echo "Processing instance: $INSTANCE_NAME"
 
     # Copy the template to the instance directory
     cp "$DOCKER_COMPOSE_TEMPLATE" "$DOCKER_COMPOSE_FILE"
-    
-    # Escape special characters in INSTANCE_NAME for sed
-    ESCAPED_INSTANCE_NAME=$(printf '%s\n' "$INSTANCE_NAME" | sed 's/[&/\]/\\&/g')
 
-    # Replace {instance-name} with the actual folder name using sed
-    sed -i "s/{instance-name}/$ESCAPED_INSTANCE_NAME/g" "$DOCKER_COMPOSE_FILE"
+    # Copy Nginx template files
+    cp nginx/nginx.conf "$NGINX_DIR/nginx.conf"
+    cp nginx/conf.d/default.conf "$CONF_D_DIR/default.conf"
+
+    # Read the domain name from a configuration file or set a default
+    if [ -f "${INSTANCE_DIR%/}/domain.conf" ]; then
+      DOMAIN_NAME=$(cat "${INSTANCE_DIR%/}/domain.conf")
+    else
+      DOMAIN_NAME="example.com"
+    fi
+
+    # Escape special characters in INSTANCE_NAME and DOMAIN_NAME for sed
+    ESCAPED_INSTANCE_NAME=$(printf '%s\n' "$INSTANCE_NAME" | sed 's/[&/\]/\\&/g')
+    ESCAPED_DOMAIN_NAME=$(printf '%s\n' "$DOMAIN_NAME" | sed 's/[&/\]/\\&/g')
+
+    # Replace placeholders in docker-compose.yml
+    sed -i "s/\${INSTANCE_NAME}/$ESCAPED_INSTANCE_NAME/g" "$DOCKER_COMPOSE_FILE"
+
+    # Replace placeholders in Nginx configuration files
+    sed -i "s/\${DOMAIN_NAME}/$ESCAPED_DOMAIN_NAME/g" "$NGINX_DIR/nginx.conf"
+    sed -i "s/\${DOMAIN_NAME}/$ESCAPED_DOMAIN_NAME/g" "$CONF_D_DIR/default.conf"
+    sed -i "s/\${INSTANCE_NAME}/$ESCAPED_INSTANCE_NAME/g" "$CONF_D_DIR/default.conf"
 
     # Format the YAML file to ensure alignment and consistency
     yq eval -P "$DOCKER_COMPOSE_FILE" -o=yaml -i
 
-    echo "docker-compose.yml updated and formatted for instance: $INSTANCE_NAME"
+    echo "docker-compose.yml and Nginx configuration updated and formatted for instance: $INSTANCE_NAME"
   fi
 done
 
-echo "All docker-compose.yml files have been updated and formatted successfully."
+echo "All docker-compose.yml and Nginx configuration files have been updated and formatted successfully."

@@ -47,3 +47,8 @@ docker-compose.yml
 /tmp
 .cache
 /.temp
+
+
+# Pre-release plugin folder
+/common/pre-release-plugin/*
+!/common/pre-release-plugin/.gitkeep

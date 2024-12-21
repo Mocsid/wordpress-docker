@@ -4,106 +4,84 @@ set -euo pipefail
 
 SCRIPT_NAME=$(basename "$0")
 
-# Helper Function: Display Usage
 usage() {
     echo "Usage: $SCRIPT_NAME <plugin_instance>"
-    echo "Example: $SCRIPT_NAME kymvex-inv-alert"
     exit 1
 }
 
-# Validate Input
 if [[ $# -ne 1 ]]; then
     echo "Error: Exactly one argument is required."
     usage
 fi
 
 PLUGIN_INSTANCE="$1"
-COMMON_PLUGINS_FOLDER="$HOME/wordpress-docker/common/pre-release-plugin"
+
+# Paths
+PRE_RELEASE_DIR="$HOME/wordpress-docker/common/pre-release-plugin"
 SOURCE_FOLDER="$HOME/wordpress-docker/instances/${PLUGIN_INSTANCE}/plugin/${PLUGIN_INSTANCE}"
-DYNAMIC_MOUNTS_SCRIPT="$HOME/wordpress-docker/common/custom-scripts/generate-dynamic-mounts.sh"
+DEST_FOLDER="$PRE_RELEASE_DIR/$PLUGIN_INSTANCE"
+GITATTR_FILE="$SOURCE_FOLDER/.gitattributes"  # Adjust if your .gitattributes is located elsewhere
 
-# Check for required commands
-if ! command -v unzip &>/dev/null; then
-    echo "Error: 'unzip' command not found. Please install it before running this script."
-    exit 1
-fi
+# 1) Remove old pre-release content
+echo "Removing all contents under $PRE_RELEASE_DIR..."
+rm -rf "${PRE_RELEASE_DIR:?}"/*
+echo "Cleanup done. $PRE_RELEASE_DIR is now empty."
 
-# Check if the source folder exists
+# 2) Ensure plugin source folder exists
 if [[ ! -d "$SOURCE_FOLDER" ]]; then
-    echo "Error: Plugin instance folder not found at $SOURCE_FOLDER"
+    echo "Error: Plugin source folder not found at $SOURCE_FOLDER"
     exit 1
 fi
 
-# Navigate to the source folder
-cd "$SOURCE_FOLDER" || { echo "Error: Failed to navigate to $SOURCE_FOLDER"; exit 1; }
-
-# Fetch Version from main plugin file
-PLUGIN_FILE="${PLUGIN_INSTANCE}.php"
-if [[ ! -f "$PLUGIN_FILE" ]]; then
-    echo "Error: Plugin file $PLUGIN_FILE not found in $SOURCE_FOLDER"
-    exit 1
-fi
-
-# Extract version line
-PLUGIN_VERSION_LINE=$(grep -E "^\s*\*\s*Version:\s*" "$PLUGIN_FILE" || true)
-if [[ -z "$PLUGIN_VERSION_LINE" ]]; then
-    echo "Error: No 'Version:' line found in $PLUGIN_FILE"
-    exit 1
-fi
-
-# Parse version from the version line
-PLUGIN_VERSION=$(echo "$PLUGIN_VERSION_LINE" | awk '{print $NF}')
-if [[ -z "$PLUGIN_VERSION" ]]; then
-    echo "Error: Failed to determine plugin version from $PLUGIN_FILE"
-    exit 1
-fi
-
-# Validate plugin version format
-if ! [[ "$PLUGIN_VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)*$ ]]; then
-    echo "Warning: Plugin version '$PLUGIN_VERSION' doesn't follow a typical semantic version pattern."
-fi
-
-# Set Release Folder Name (without version number)
-RELEASE_FOLDER="${PLUGIN_INSTANCE}"
-
-# Full Destination Path
-DEST_FOLDER="$COMMON_PLUGINS_FOLDER/$RELEASE_FOLDER"
-
-# Remove any unnecessary files in pre-release folder
-echo "Cleaning up pre-release plugin folder..."
-find "$COMMON_PLUGINS_FOLDER" -type d -name "${PLUGIN_INSTANCE}-release*" -exec rm -rf {} +
-find "$COMMON_PLUGINS_FOLDER" -type d -name "*$'\r'" -exec rm -rf {} +
-
-# Remove existing folder if it exists
-if [[ -d "$DEST_FOLDER" ]]; then
-    echo "Removing existing folder: $DEST_FOLDER"
-    rm -rf "$DEST_FOLDER"
-fi
-
-# Create the destination folder
+# 3) Copy plugin folder to pre-release
+echo "Copying $SOURCE_FOLDER to $DEST_FOLDER..."
 mkdir -p "$DEST_FOLDER"
+cp -R "$SOURCE_FOLDER/." "$DEST_FOLDER"
 
-# Check if the plugin ZIP exists
-PLUGIN_ZIP="${PLUGIN_INSTANCE}.zip"
-if [[ ! -f "$PLUGIN_ZIP" ]]; then
-    echo "Error: Plugin ZIP file $PLUGIN_ZIP not found in $SOURCE_FOLDER"
-    exit 1
-fi
+# 4) If .gitattributes exists, parse export-ignore patterns
+if [[ -f "$GITATTR_FILE" ]]; then
+    echo "Parsing .gitattributes in $GITATTR_FILE for export-ignore rules..."
+    while IFS= read -r line; do
+        # Skip empty lines or lines not containing 'export-ignore'
+        [[ -z "$line" ]] && continue
+        [[ "$line" != *"export-ignore"* ]] && continue
+        
+        # Extract the pattern (first column)
+        pattern="$(echo "$line" | awk '{print $1}')"
 
-# Extract the ZIP file into the release folder
-echo "Extracting $PLUGIN_ZIP to $DEST_FOLDER..."
-unzip -q "$PLUGIN_ZIP" -d "$DEST_FOLDER"
+        # Clean up leading/trailing slashes for easier 'find' usage
+        # This is a simplistic approach; adjust as needed
+        stripped_pattern="${pattern#/}"
+        stripped_pattern="${stripped_pattern%/}"
 
-echo "Pre-release version created successfully:"
-echo "- Plugin Instance: $PLUGIN_INSTANCE"
-echo "- Version: $PLUGIN_VERSION"
-echo "- Destination: $DEST_FOLDER"
-echo "You can now activate the plugin in WordPress for testing."
-
-# Trigger the dynamic mount script
-if [[ -f "$DYNAMIC_MOUNTS_SCRIPT" ]]; then
-    echo "Running dynamic mount script to update Docker mounts..."
-    bash "$DYNAMIC_MOUNTS_SCRIPT" "$PLUGIN_INSTANCE"
+        echo "Removing pattern: $pattern (interpreted as $stripped_pattern)"
+        
+        # If pattern has wildcards (e.g., *.log), we handle them
+        # We'll do a 'find' under $DEST_FOLDER matching the pattern
+        # This is tricky: .gitattributes patterns can differ from find patterns
+        # We'll do a best-effort approach
+        if [[ "$stripped_pattern" == *"*"* ]]; then
+            # Find matching files by name
+            find "$DEST_FOLDER" -type f -name "$stripped_pattern" -exec rm -f {} +
+            find "$DEST_FOLDER" -type d -name "$stripped_pattern" -exec rm -rf {} +
+        else
+            # Remove exact path matches
+            # This handles cases like /tests or /bin
+            find "$DEST_FOLDER" -path "*/$stripped_pattern" -exec rm -rf {} +
+        fi
+    done < <(grep 'export-ignore' "$GITATTR_FILE")
 else
-    echo "Warning: Dynamic mount script $DYNAMIC_MOUNTS_SCRIPT not found in the custom-scripts folder. Please ensure it exists and rerun if needed."
+    echo "No .gitattributes file found at $GITATTR_FILE; skipping export-ignore parsing."
 fi
+
+echo "Final pre-release directory: $DEST_FOLDER"
+ls -R "$DEST_FOLDER"
+
+# Optional: run a dynamic mount script if needed
+DYNAMIC_MOUNTS_SCRIPT="$HOME/wordpress-docker/common/custom-scripts/generate-dynamic-mounts.sh"
+if [[ -f "$DYNAMIC_MOUNTS_SCRIPT" ]]; then
+    echo "Running dynamic mount script..."
+    bash "$DYNAMIC_MOUNTS_SCRIPT" "$PLUGIN_INSTANCE"
+fi
+
+echo "Done."

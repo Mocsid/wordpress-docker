@@ -7,7 +7,34 @@ RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli
 
 # Install necessary dependencies, Redis server, SOAP extension, and Puppeteer dependencies
 RUN apt-get update && \
-    apt-get install -y libxml2-dev cron redis-server curl gnupg git ca-certificates libnss3 libxss1 libatk-bridge2.0-0 libgtk-3-0 libasound2 libdrm2 libgbm1 libxcb-dri3-0 libxcomposite1 libxcursor1 libxdamage1 libxi6 libxtst6 xdg-utils && \
+    apt-get install -y \
+    libxml2-dev \
+    cron \
+    redis-server \
+    curl \
+    gnupg \
+    git \
+    ca-certificates \
+    libnss3 \
+    libxss1 \
+    libatk-bridge2.0-0 \
+    libgtk-3-0 \
+    libasound2 \
+    libdrm2 \
+    libgbm1 \
+    libxcb-dri3-0 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxi6 \
+    libxtst6 \
+    xdg-utils \
+    wget \
+    subversion \
+    tar \
+    unzip \
+    mariadb-client \
+    nano && \
     docker-php-ext-install soap && \
     pecl install redis && \
     docker-php-ext-enable redis
@@ -16,12 +43,9 @@ RUN apt-get update && \
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get install -y nodejs
 
-# Install Puppeteer globally and set up cache directory with correct permissions
-RUN npm install puppeteer --unsafe-perm=true --allow-root && \
-    mkdir -p /var/www/.cache && chmod -R 777 /var/www/.cache && \
-    PUPPETEER_CACHE_DIR=/var/www/.cache/puppeteer
-    
-RUN apt-get update && apt-get install -y xvfb
+# Install PHPUnit globally
+RUN wget -O /usr/local/bin/phpunit https://phar.phpunit.de/phpunit-9.phar && \
+    chmod +x /usr/local/bin/phpunit
 
 # Clean up to reduce the image size
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
